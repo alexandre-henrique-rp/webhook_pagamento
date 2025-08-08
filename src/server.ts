@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import https from 'node:https';
+import path from 'node:path';
 import type { TLSSocket } from 'node:tls';
 import express from 'express';
 import logger from 'morgan';
@@ -13,7 +14,10 @@ function carregarArquivoObrigatorio(caminho: string | undefined, nome: string): 
     throw new Error(`Variável de ambiente para ${nome} não configurada. Defina ${nome}.`);
   }
   try {
-    return fs.readFileSync(caminho);
+    const caminhoResolvido = path.isAbsolute(caminho)
+      ? caminho
+      : path.resolve(process.cwd(), caminho);
+    return fs.readFileSync(caminhoResolvido);
   } catch (erro) {
     throw new Error(`Falha ao ler ${nome} em '${caminho}': ${(erro as Error).message}`);
   }
@@ -58,20 +62,27 @@ app.get('/health', (_req, res) => {
 
 // Endpoint para recepção do webhook (cadastrar: https://SEUDOMINIO.com/webhook/pix)
 app.post("/webhook/pix", (request, response) => {
-  // Em HTTPS, o socket é um TLSSocket em runtime; fazemos cast para acessar 'authorized' com segurança.
-  const tlsSocket = request.socket as TLSSocket;
-  const isAuthorized = tlsSocket.authorized === true;
+  // Suporte a dois cenários:
+  // 1) mTLS terminado no Nginx: valida via header X-SSL-Client-Verify (SUCCESS/FAILED/NONE)
+  // 2) mTLS direto no Node: fallback para TLSSocket.authorized
+  const clientVerifyHeader = String(request.headers['x-ssl-client-verify'] ?? '').toUpperCase();
+  const hasNginxVerification = clientVerifyHeader.length > 0;
+  const isAuthorized = hasNginxVerification
+    ? clientVerifyHeader === 'SUCCESS'
+    : ((request.socket as TLSSocket).authorized === true);
 
-  if (isAuthorized) {
-    // Seu código tratando a callback
-    // Dica: responda 200 rapidamente e processe assíncrono para evitar timeouts
-    // Ex.: enfileirar processamento usando um job/worker, garantindo idempotência (por txid/endToEndId)
-    console.log('[WEBHOOK/PIX] Payload recebido com mTLS válido:', request.body);
-    response.status(200).end();
-  } else {
-    console.warn('[WEBHOOK/PIX] Requisição sem mTLS válido. Negando com 401.');
-    response.status(401).end();
+  if (!isAuthorized) {
+    console.warn('[WEBHOOK/PIX] Requisição sem mTLS válido (Nginx header ou TLSSocket). Negando com 401.', {
+      clientVerifyHeader,
+    });
+    return response.status(401).end();
   }
+
+  // Seu código tratando a callback
+  // Dica: responda 200 rapidamente e processe assíncrono para evitar timeouts
+  // Ex.: enfileirar processamento usando um job/worker, garantindo idempotência (por txid/endToEndId)
+  console.log('[WEBHOOK/PIX] Payload recebido com autenticação válida:', request.body);
+  return response.status(200).end();
 });
 
 httpsServer.listen(PORT, () =>
