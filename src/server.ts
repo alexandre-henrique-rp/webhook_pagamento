@@ -24,7 +24,8 @@ app.use(express.urlencoded({ extended: false }));
 // Caminho para a pasta de certificados
 const certsDir = path.join(__dirname, "..", "certs");
 const caDir = path.join(certsDir, "public");
-const privateDir = path.join(certsDir, "private");
+const rotaPrivada = process.env.SSL_CERT_PATH || "private";
+const privateDir = path.join(rotaPrivada);
 
 // ATENÇÃO: Coloque os arquivos de certificado corretos na pasta 'certs'
 const options = {
