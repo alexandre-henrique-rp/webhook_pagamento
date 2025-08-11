@@ -44,6 +44,16 @@ const options = {
 // Cria o servidor HTTPS com as opções de mTLS
 const server = https.createServer(options, app);
 
+// Endpoint para configuração do webhook, você precisa cadastrar https://SEUDOMINIO.com/webhook
+app.post("/", (request, response) => {
+  // Verifica se a requisição que chegou nesse endpoint foi autorizada
+  if ((request.socket as TLSSocket).authorized) {
+    response.status(200).end();
+  } else {
+    response.status(401).end();
+  }
+});
+
 // Rota para receber o webhook com a tipagem aplicada
 app.post("/pix", (req: Request, res: Response) => {
   if ((req.socket as TLSSocket).authorized) {
