@@ -1,3 +1,4 @@
+import "dotenv/config";
 // Node.js Built-in Modules
 import fs from "node:fs";
 import https from "node:https";
@@ -61,7 +62,7 @@ const options = {
   /**
    * Define a versão mínima do TLS, conforme exigido pela Efí.
    */
-  minVersion: "TLSv1.2" as const,
+  minVersion: "TLSv1.2" as const
 };
 
 /**
