@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: false }));
  * Utiliza a variável de ambiente SSL_CERT_PATH para o diretório do certificado do domínio,
  * ou assume um subdiretório 'private' dentro de 'certs' como padrão.
  */
-const certsDir = path.join(__dirname, "..", "certs");
+const certsDir = path.join(process.cwd(), "certs");
 const caDir = path.join(certsDir, "public");
 const privateKeyDir = process.env.SSL_CERT_PATH
   ? path.resolve(process.env.SSL_CERT_PATH)
