@@ -88,6 +88,7 @@ app.post("/pix", (req: Request, res: Response) => {
   if (payload?.pix?.length > 0) {
     // É uma notificação de pagamento
     console.log("Webhook PIX recebido:", JSON.stringify(payload, null, 2));
+    fs.writeFileSync("payload.json", JSON.stringify(payload, null, 2));
     // TODO: Adicionar a lógica para processar o payload (salvar no banco, etc.)
     res.status(200).send("Notificação recebida.");
   } else {
