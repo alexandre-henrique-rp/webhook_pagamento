@@ -12,7 +12,7 @@ import logger from "morgan";
 import type { Payload } from "./types/payload";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
 // Configuração dos middlewares
 app.use(logger("dev"));
@@ -21,50 +21,79 @@ app.use(express.urlencoded({ extended: false }));
 
 // --- Configuração do Servidor HTTPS com mTLS ---
 
-// Caminho para a pasta de certificados
+/**
+ * Define os caminhos para os certificados TLS/mTLS.
+ * Utiliza a variável de ambiente SSL_CERT_PATH para o diretório do certificado do domínio,
+ * ou assume um subdiretório 'private' dentro de 'certs' como padrão.
+ */
 const certsDir = path.join(__dirname, "..", "certs");
 const caDir = path.join(certsDir, "public");
-const rotaPrivada = process.env.SSL_CERT_PATH || "private";
-const privateDir = path.join(rotaPrivada);
+const privateKeyDir = process.env.SSL_CERT_PATH
+  ? path.resolve(process.env.SSL_CERT_PATH)
+  : path.join(certsDir, "private");
 
-// ATENÇÃO: Coloque os arquivos de certificado corretos na pasta 'certs'
+/**
+ * Opções de configuração para o servidor HTTPS com mTLS (Mutual TLS).
+ */
 const options = {
-  key: fs.readFileSync(path.join(privateDir, "chave-privada.pem")), // Sua chave privada
-  cert: fs.readFileSync(path.join(privateDir, "certificado.pem")), // Seu certificado
-  ca: fs.readFileSync(path.join(caDir, "certificate-chain-homolog.crt")), // Certificado da CA da Efí
-
-  // Exige que o cliente (Efí) envie um certificado
+  /**
+   * Chave privada do seu certificado de domínio (privkey.pem).
+   */
+  key: fs.readFileSync(path.join(privateKeyDir, "privkey.pem")),
+  /**
+   * Certificado público do seu domínio (fullchain.pem).
+   */
+  cert: fs.readFileSync(path.join(privateKeyDir, "fullchain.pem")),
+  /**
+   * Certificado da Autoridade Certificadora (CA) da Efí.
+   * Usado para validar o certificado apresentado pelo cliente (Efí).
+   */
+  ca: fs.readFileSync(path.join(caDir, "certificate-chain-homolog.crt")),
+  /**
+   * Exige que o cliente (Efí) apresente um certificado.
+   */
   requestCert: true,
-
-  // Rejeita qualquer conexão que não tenha um certificado válido assinado pela CA da Efí
+  /**
+   * Rejeita qualquer conexão cujo certificado não seja assinado pela CA fornecida.
+   * Garante que apenas a Efí possa se conectar.
+   */
   rejectUnauthorized: true,
-  minVersion: "TLSv1.2" as const
+  /**
+   * Define a versão mínima do TLS, conforme exigido pela Efí.
+   */
+  minVersion: "TLSv1.2" as const,
 };
 
-// Cria o servidor HTTPS com as opções de mTLS
+/**
+ * Cria uma instância do servidor HTTPS, aplicando as opções de mTLS ao app Express.
+ */
 const server = https.createServer(options, app);
 
-// Endpoint para configuração do webhook, você precisa cadastrar https://SEUDOMINIO.com/webhook
-app.post("/", (request, response) => {
-  // Verifica se a requisição que chegou nesse endpoint foi autorizada
-  if ((request.socket as TLSSocket).authorized) {
-    response.status(200).end();
-  } else {
-    response.status(401).end();
-  }
-});
-
-// Rota para receber o webhook com a tipagem aplicada
+/**
+ * Endpoint unificado para o webhook da Efí na rota '/pix'.
+ * Lida tanto com o Handshake de validação (corpo vazio) quanto com o recebimento
+ * de notificações de pagamento PIX (corpo com payload).
+ * A Efí exige que esta rota seja cadastrada como: https://SEUDOMINIO.com/pix
+ */
 app.post("/pix", (req: Request, res: Response) => {
-  if ((req.socket as TLSSocket).authorized) {
-    const payload: Payload = req.body;
+  // 1. Valida se a conexão foi autenticada via mTLS.
+  if (!(req.socket as TLSSocket).authorized) {
+    console.warn("Conexão não autorizada na rota /pix. Recusado.");
+    return res.status(401).send("Cliente não autorizado.");
+  }
 
-    console.log("Webhook recebido:", payload);
+  const payload: Payload = req.body;
 
-    // A Efí espera uma resposta simples para validar o Hand-Shake
-    res.status(200).end();
+  // 2. Verifica se é uma notificação de pagamento ou um handshake.
+  if (payload?.pix?.length > 0) {
+    // É uma notificação de pagamento
+    console.log("Webhook PIX recebido:", JSON.stringify(payload, null, 2));
+    // TODO: Adicionar a lógica para processar o payload (salvar no banco, etc.)
+    res.status(200).send("Notificação recebida.");
   } else {
-    res.status(401).end();
+    // É um Handshake de validação (corpo da requisição vazio)
+    console.log("Handshake do Webhook validado com sucesso.");
+    res.status(200).end();
   }
 });
 
