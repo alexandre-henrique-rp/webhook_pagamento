@@ -106,7 +106,8 @@ app.post("/webhook/pix", async (req: Request, res: Response) => {
       const horario = item.horario;
       const infoPagador = item.infoPagador;
       const nomePagador = item.gnExtras.pagador.nome;
-      const documentoPagador = item.gnExtras.pagador.cnpj || item.gnExtras.pagador.cpf;
+      const documentoPagador =
+        item.gnExtras.pagador.cnpj || item.gnExtras.pagador.cpf;
       const banco = item.gnExtras.pagador.codigoBanco;
 
       const solicitacao: any = await prisma.read.solicitacao.findFirst({
@@ -129,22 +130,24 @@ app.post("/webhook/pix", async (req: Request, res: Response) => {
           }
         });
       }
-      await fetch("https://pagamento.sisnato.com.br/pagamentos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          txid: txid,
-          dt_pg: new Date(horario).toISOString(),
-          valor: valor,
-          forma_pagamento: "PIX",
-          infoPagador: infoPagador,
-          nomePagador: nomePagador,
-          documentoPagador: documentoPagador,
-          banco: banco
-        })
-      });
+      if (txid) {
+        await fetch("https://pagamento.sisnato.com.br/pagamentos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            txid: txid,
+            dt_pg: new Date(horario).toISOString(),
+            valor: valor,
+            forma_pagamento: "PIX",
+            infoPagador: infoPagador,
+            nomePagador: nomePagador,
+            documentoPagador: documentoPagador,
+            banco: banco
+          })
+        });
+      }
     }
   } else {
     res.status(200).end();
