@@ -104,6 +104,10 @@ app.post("/webhook/pix", async (req: Request, res: Response) => {
       const txid = item.txid;
       const valor = parseFloat(item.valor);
       const horario = item.horario;
+      const infoPagador = item.infoPagador;
+      const nomePagador = item.gnExtras.pagador.nome;
+      const documentoPagador = item.gnExtras.pagador.cnpj || item.gnExtras.pagador.cpf;
+      const banco = item.gnExtras.pagador.codigoBanco;
 
       const solicitacao: any = await prisma.read.solicitacao.findFirst({
         where: {
@@ -125,8 +129,22 @@ app.post("/webhook/pix", async (req: Request, res: Response) => {
           }
         });
       }
-      console.log("Webhook PIX recebido:", JSON.stringify(item, null, 2));
-      fs.writeFileSync("payload_pix.json", JSON.stringify(item, null, 2));
+      await fetch("https://pagamento.sisnato.com.br/pagamentos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          txid: txid,
+          dt_pg: new Date(horario).toISOString(),
+          valor: valor,
+          forma_pagamento: "PIX",
+          infoPagador: infoPagador,
+          nomePagador: nomePagador,
+          documentoPagador: documentoPagador,
+          banco: banco
+        })
+      });
     }
   } else {
     res.status(200).end();

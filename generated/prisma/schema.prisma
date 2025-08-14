@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Alert {
+  id             Int          @id @unique @default(autoincrement())
+  solicitacao_id Int?
+  status         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime?
+  descricao      String
+  corretor_id    Int?
+  User           User?        @relation(fields: [corretor_id], references: [id], onUpdate: SetNull)
+  Solicitacao    Solicitacao? @relation(fields: [solicitacao_id], references: [id], onUpdate: SetNull)
+}
+
+model Bug {
+  id        Int       @id @unique @default(autoincrement())
+  descricao String
+  status    Boolean   @default(true)
+  createAt  DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model Chamado {
+  id            Int       @id @unique @default(autoincrement())
+  descricao     String
+  status        String
+  idUser        Int
+  createAt      DateTime  @default(now())
+  updatedAt     DateTime?
+  solicitacaoId Int
+  images        Json[]
+  chat          Json[]
+  temp          Json[]
+  departamento  String?   @default("vendas")
+  dth_qru       DateTime  @default(now())
+  prioridade    String?   @default("baixa")
+  titulo        String
+}
+
+model Construtora {
+  id                    Int                     @id @unique @default(autoincrement())
+  cnpj                  String                  @unique @db.VarChar(18)
+  razaosocial           String                  @db.VarChar(255)
+  fantasia              String?                 @db.VarChar(255)
+  tel                   String?                 @db.VarChar(15)
+  email                 String?                 @db.VarChar(100)
+  obs                   String?
+  status                Boolean                 @default(true)
+  valor_cert            Float?                  @default(84.00)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime?
+  atividade             String?                 @db.VarChar(100)
+  Msg_Boas_Vindas       String?
+  responsavel           String?
+  Empreendimento        Empreendimento[]
+  FinanceiroConstrutora FinanceiroConstrutora[]
+  Solicitacao           Solicitacao[]
+  UserConstrutora       UserConstrutora[]
+  relatorio_financeiro  relatorio_financeiro[]
+
+  @@index([cnpj], map: "idx_construtora_cnpj")
+  @@index([razaosocial], map: "idx_construtora_razaosocial")
+}
+
+model Direto {
+  id            Int          @id @default(autoincrement())
+  solicitacaoId Int?
+  descricao     String?
+  createAt      DateTime     @default(now())
+  Solicitacao   Solicitacao? @relation(fields: [solicitacaoId], references: [id])
+  DiretoTag     DiretoTag[]
+}
+
+model DiretoTag {
+  id        Int      @id @default(autoincrement())
+  diretoId  Int
+  descricao String
+  createAt  DateTime @default(now())
+  Direto    Direto   @relation(fields: [diretoId], references: [id], onDelete: Cascade)
+}
+
+model Empreendimento {
+  id                       Int                        @id @unique @default(autoincrement())
+  nome                     String                     @db.VarChar(255)
+  endereco                 String?                    @db.VarChar(255)
+  cidade                   String?                    @db.VarChar(100)
+  estado                   String?                    @db.VarChar(2)
+  cep                      String?                    @db.VarChar(10)
+  obs                      String?
+  status                   Boolean                    @default(true)
+  tag                      String?                    @db.VarChar(50)
+  construtoraId            Int?
+  responsavelId            Int?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime?
+  Construtora              Construtora?               @relation(fields: [construtoraId], references: [id])
+  User                     User?                      @relation(fields: [responsavelId], references: [id])
+  FinanceiroEmpreendimento FinanceiroEmpreendimento[]
+  Solicitacao              Solicitacao[]
+  UserEmpreendimento       UserEmpreendimento[]
+  relatorio_financeiro     relatorio_financeiro[]
+
+  @@index([cidade, estado], map: "idx_empreendimento_localizacao")
+  @@index([nome], map: "idx_empreendimento_nome")
+}
+
+model Financeiro {
+  id                       Int                        @id @unique @default(autoincrement())
+  cnpj                     String                     @unique @db.VarChar(18)
+  razaosocial              String                     @db.VarChar(255)
+  fantasia                 String?                    @db.VarChar(255)
+  tel                      String?
+  email                    String?                    @db.VarChar(100)
+  obs                      String?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime?
+  direto                   Boolean                    @default(false)
+  responsavel              String?
+  valor_cert               Float?                     @default(0)
+  FinanceiroConstrutora    FinanceiroConstrutora[]
+  FinanceiroEmpreendimento FinanceiroEmpreendimento[]
+  Solicitacao              Solicitacao[]
+  UserFinanceiro           UserFinanceiro[]
+
+  @@index([cnpj], map: "idx_financeiro_cnpj")
+  @@index([razaosocial], map: "idx_financeiro_razaosocial")
+}
+
+model FinanceiroConstrutora {
+  financeiroId  Int
+  construtoraId Int
+  Construtora   Construtora @relation(fields: [construtoraId], references: [id])
+  Financeiro    Financeiro  @relation(fields: [financeiroId], references: [id])
+
+  @@id([construtoraId, financeiroId])
+}
+
+model FinanceiroEmpreendimento {
+  financeiroId     Int
+  empreendimentoId Int
+  Empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  Financeiro       Financeiro     @relation(fields: [financeiroId], references: [id], onDelete: Cascade)
+
+  @@id([empreendimentoId, financeiroId])
+}
+
+model Logs {
+  id        Int       @id @unique @default(autoincrement())
+  User      Int
+  EffectId  Int
+  descricao String
+  createAt  DateTime  @default(now())
+  updatedAt DateTime?
+  rota      String
+}
+
+model Solicitacao {
+  id                Int             @id @unique @default(autoincrement())
+  nome              String          @db.VarChar(255)
+  email             String          @db.VarChar(100)
+  cpf               String          @db.VarChar(14)
+  telefone          String?         @db.VarChar(15)
+  telefone2         String?         @db.VarChar(15)
+  dt_nascimento     DateTime?
+  id_fcw            Int?
+  cnh               String?         @db.VarChar(20)
+  ativo             Boolean         @default(true)
+  rela_quest        Boolean         @default(false)
+  distrato          Boolean         @default(false)
+  dt_distrato       DateTime?
+  status_aprovacao  Boolean?        @default(false)
+  distrato_id       Int?
+  andamento         String?         @db.VarChar(100)
+  type_validacao    String?         @db.VarChar(50)
+  dt_aprovacao      DateTime?       @db.Date
+  hr_aprovacao      DateTime?       @db.Time(6)
+  dt_agendamento    DateTime?       @db.Date
+  hr_agendamento    DateTime?       @db.Time(6)
+  estatos_pgto      String?         @db.VarChar(50)
+  valorcd           Float?
+  situacao_pg       Int?            @default(0)
+  freqSms           Int?            @default(0)
+  alertanow         Boolean?        @default(false)
+  dt_criacao_now    DateTime?
+  statusAtendimento Boolean         @default(false)
+  pause             Boolean?        @default(false)
+  corretorId        Int?
+  construtoraId     Int?
+  financeiroId      Int?
+  empreendimentoId  Int?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime?
+  relacionamentos   Json[]
+  dt_revogacao      DateTime?
+  direto            Boolean         @default(false)
+  txid              String?         @db.VarChar(300)
+  pixCopiaECola     String?
+  imagemQrcode      String?
+  uploadCnh         Json?
+  uploadRg          Json?
+  obs               Json[]
+  pg_andamento      String?         @default("pendente") @db.VarChar(50)
+  pg_date           DateTime?
+  pg_status         Boolean?        @default(false)
+  Alert             Alert[]
+  Direto            Direto[]
+  Construtora       Construtora?    @relation(fields: [construtoraId], references: [id])
+  User              User?           @relation(fields: [corretorId], references: [id])
+  Empreendimento    Empreendimento? @relation(fields: [empreendimentoId], references: [id])
+  Financeiro        Financeiro?     @relation(fields: [financeiroId], references: [id])
+  Tag               Tag[]
+
+  @@index([email], map: "idx_solicitacao_email")
+  @@index([txid], map: "idx_solicitacao_txid")
+}
+
+model Suporte {
+  id          Int       @id @unique @default(autoincrement())
+  tag         String
+  descricao   String?
+  solicitacao Int?
+  imgSuspensa String?
+  createAt    DateTime  @default(now())
+  updatedAt   DateTime?
+  urlveiw     Json[]
+}
+
+model SystemMessage {
+  id        Int       @id @unique @default(autoincrement())
+  tipo      String
+  message   String
+  createAt  DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model Tag {
+  id          Int          @id @default(autoincrement())
+  solicitacao Int?
+  descricao   String?
+  createAt    DateTime     @default(now())
+  Solicitacao Solicitacao? @relation(fields: [solicitacao], references: [id], onDelete: NoAction, onUpdate: SetNull)
+}
+
+model TagList {
+  id        Int      @id @unique @default(autoincrement())
+  label     String
+  createdAt DateTime @default(now())
+}
+
+model Termo {
+  id        Int       @id @unique @default(autoincrement())
+  termo     String
+  politica  String
+  createAt  DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model User {
+  id                 Int                  @id @unique @default(autoincrement())
+  username           String               @unique @db.VarChar(50)
+  password           String               @db.VarChar(255)
+  password_key       String               @db.VarChar(100)
+  telefone           String?              @db.VarChar(15)
+  email              String?              @unique @db.VarChar(100)
+  cpf                String?              @db.VarChar(14)
+  nome               String?              @db.VarChar(255)
+  cargo              String?              @db.VarChar(100)
+  hierarquia         String?              @db.VarChar(100)
+  reset_password     Boolean?             @default(true)
+  status             Boolean?             @default(false)
+  sms_relat          Boolean?             @default(false)
+  termos             Boolean?             @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime?
+  role               Json?
+  Alert              Alert[]
+  Empreendimento     Empreendimento[]
+  Solicitacao        Solicitacao[]
+  UserConstrutora    UserConstrutora[]
+  UserEmpreendimento UserEmpreendimento[]
+  UserFinanceiro     UserFinanceiro[]
+
+  @@index([cpf], map: "idx_user_cpf")
+  @@index([email], map: "idx_user_email")
+  @@index([username], map: "idx_user_username")
+}
+
+model UserConstrutora {
+  userId        Int
+  construtoraId Int
+  Construtora   Construtora @relation(fields: [construtoraId], references: [id], onDelete: Cascade)
+  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, construtoraId])
+}
+
+model UserEmpreendimento {
+  userId           Int
+  empreendimentoId Int
+  Empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  User             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, empreendimentoId])
+}
+
+model UserFinanceiro {
+  userId       Int
+  financeiroId Int
+  Financeiro   Financeiro @relation(fields: [financeiroId], references: [id], onDelete: Cascade)
+  User         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, financeiroId])
+}
+
+model VideosFaq {
+  id       Int      @id @unique @default(autoincrement())
+  nome     String
+  url      String
+  createAt DateTime @default(now())
+  tag      String
+}
+
+model relatorio_financeiro {
+  id               Int             @id @unique @default(autoincrement())
+  protocolo        String          @unique
+  situacao_pg      Int             @default(0)
+  nota_fiscal      String?         @db.VarChar(255)
+  start            DateTime?       @db.Date
+  end              DateTime?       @db.Date
+  statusNota       Boolean?        @default(false)
+  createAt         DateTime        @default(now())
+  updatedAt        DateTime?
+  construtoraId    Int?
+  total_cert       Int?
+  valorTotal       Float?
+  solicitacao      Json[]          @default([])
+  pdf              String?         @db.VarChar(255)
+  xlsx             String?         @db.VarChar(255)
+  modelo           String?
+  empreendimentoId Int?
+  dt_pg            DateTime?
+  status           Boolean         @default(true)
+  Construtora      Construtora?    @relation(fields: [construtoraId], references: [id], onDelete: NoAction, onUpdate: SetNull)
+  Empreendimento   Empreendimento? @relation(fields: [empreendimentoId], references: [id], onDelete: NoAction, onUpdate: SetNull)
+}
