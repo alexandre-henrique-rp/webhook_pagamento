@@ -3,6 +3,7 @@
     "descricao",
     "docusaurus",
     "eslintcache",
+    "estatos",
     "fullchain",
     "horario",
     "jscoverage",
@@ -11,6 +12,7 @@
     "nuxt",
     "Nuxt",
     "Obrigatorio",
+    "pgto",
     "privkey",
     "relatorio",
     "Situacao",
@@ -19,6 +21,7 @@
     "Sveltekit",
     "txid",
     "Valibot",
+    "valorcd",
     "vitepress",
     "vuepress",
     "wscript"

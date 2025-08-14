@@ -53,7 +53,7 @@ model Construtora {
   email                 String?                 @db.VarChar(100)
   obs                   String?
   status                Boolean                 @default(true)
-  valor_cert            Float?                  @default(0)
+  valor_cert            Float?                  @default(84.00)
   createdAt             DateTime                @default(now())
   updatedAt             DateTime?
   atividade             String?                 @db.VarChar(100)
@@ -123,6 +123,7 @@ model Financeiro {
   updatedAt                DateTime?
   direto                   Boolean                    @default(false)
   responsavel              String?
+  valor_cert               Float?                     @default(0)
   FinanceiroConstrutora    FinanceiroConstrutora[]
   FinanceiroEmpreendimento FinanceiroEmpreendimento[]
   Solicitacao              Solicitacao[]
@@ -205,7 +206,9 @@ model Solicitacao {
   uploadCnh         Json?
   uploadRg          Json?
   obs               Json[]
-  qrcode            String?         @db.VarChar(500)
+  pg_andamento      String?         @default("pendente") @db.VarChar(50)
+  pg_date           DateTime?
+  pg_status         Boolean?        @default(false)
   Alert             Alert[]
   Direto            Direto[]
   Construtora       Construtora?    @relation(fields: [construtoraId], references: [id])
@@ -215,6 +218,7 @@ model Solicitacao {
   Tag               Tag[]
 
   @@index([email], map: "idx_solicitacao_email")
+  @@index([txid], map: "idx_solicitacao_txid")
 }
 
 model Suporte {
