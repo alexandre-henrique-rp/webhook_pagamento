@@ -1,7 +1,9 @@
 {
   "cSpell.words": [
+    "Certbot",
     "codigo",
     "descricao",
+    "dhparams",
     "docusaurus",
     "eslintcache",
     "estatos",
@@ -16,6 +18,7 @@
     "pgto",
     "privkey",
     "relatorio",
+    "sisnato",
     "Situacao",
     "solicitacao",
     "stylelintcache",

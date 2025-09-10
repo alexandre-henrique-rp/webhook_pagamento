@@ -1,16 +1,14 @@
 import "dotenv/config";
 // Node.js Built-in Modules
 import fs from "node:fs";
-import https from "node:https";
-import path from "node:path";
 
 // External Packages
 import express, { type Request, type Response } from "express";
 import logger from "morgan";
 
 // Local Modules
-import type { Payload } from "./types/payload";
 import { prisma } from "./lib/prisma";
+import type { Payload } from "./types/payload";
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -20,70 +18,35 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// --- Configuração do Servidor HTTPS com mTLS ---
+// Middleware para verificar certificado do cliente (mTLS)
+app.use((req: Request, res: Response, next) => {
+  // Verificar se o certificado do cliente foi validado pelo Nginx
+  const clientVerify = req.headers["x-ssl-client-verify"];
+  const clientDN = req.headers["x-ssl-client-dn"];
 
-/**
- * Define os caminhos para os certificados TLS/mTLS.
- * Utiliza a variável de ambiente SSL_CERT_PATH para o diretório do certificado do domínio,
- * ou assume um subdiretório 'private' dentro de 'certs' como padrão.
- */
-const certsDir = path.join(process.cwd(), "certs");
-const caDir = path.join(certsDir, "public");
-console.log("🚀 ~ caDir:", caDir);
-const privateKeyDir = process.env.SSL_CERT_PATH
-  ? path.resolve(process.env.SSL_CERT_PATH)
-  : path.join(certsDir, "private");
-console.log("🚀 ~ privateKeyDir:", privateKeyDir);
+  console.log("🔐 Cliente SSL Verify:", clientVerify);
+  console.log("🔐 Cliente DN:", clientDN);
 
-/**
- * Opções de configuração para o servidor HTTPS com mTLS (Mutual TLS).
- */
-const options = {
-  /**
-   * Chave privada do seu certificado de domínio (privkey.pem).
-   */
-  key: fs.readFileSync(path.join(privateKeyDir, "privkey.pem")),
-  /**
-   * Certificado público do seu domínio (fullchain.pem).
-   */
-  cert: fs.readFileSync(path.join(privateKeyDir, "fullchain.pem")),
-  /**
-   * Certificado da Autoridade Certificadora (CA) da Efí.
-   * Usado para validar o certificado apresentado pelo cliente (Efí).
-   */
-  // ca: fs.readFileSync(path.join(caDir, "certificate-chain-prod.crt")),
-  ca: fs.readFileSync(path.join(caDir, "certificate-chain-homolog.crt")),
-  /**
-   * Exige que o cliente (Efí) apresente um certificado.
-   */
-  requestCert: true,
-  /**
-   * Rejeita qualquer conexão cujo certificado não seja assinado pela CA fornecida.
-   * Garante que apenas a Efí possa se conectar.
-   */
-  rejectUnauthorized: false,
-  /**
-   * Define a versão mínima do TLS, conforme exigido pela Efí.
-   */
-  minVersion: "TLSv1.2" as const
-};
+  // Se não for uma verificação válida, rejeitar
+  if (clientVerify !== "SUCCESS") {
+    console.log("❌ Certificado do cliente não válido");
+    return res.status(403).json({ error: "Certificado não autorizado" });
+  }
 
-/**
- * Cria uma instância do servidor HTTPS, aplicando as opções de mTLS ao app Express.
- */
-// Servidor HTTP para o proxy NGINX
-app.listen(PORT, () => {
-  console.log(`Servidor HTTP rodando na porta ${PORT}`);
+  next();
 });
 
-// Servidor HTTPS com mTLS para acesso direto
-const httpsServer = https.createServer(options, app);
-httpsServer.listen(3004, () => {
-  console.log(`Servidor HTTPS com mTLS rodando na porta 3004`);
+// --- APENAS SERVIDOR HTTP (Nginx fará o mTLS) ---
+app.listen(PORT, () => {
+  console.log(`Servidor HTTP rodando na porta ${PORT}`);
+  console.log(
+    `Webhook disponível em: https://webhook.sisnato.com.br/webhook/pix`
+  );
 });
 
 app.post("/webhook", (req: Request, res: Response) => {
-  fs.writeFileSync("payload.json", JSON.stringify(req.body, null, 2));
+  console.log("🚀 ~ req.body:", req.body);
+    fs.appendFileSync("payload.json", `${JSON.stringify(req.body, null, 2)}\n`);
   res.status(200).end();
 });
 
@@ -91,65 +54,149 @@ app.post("/webhook", (req: Request, res: Response) => {
  * Endpoint unificado para o webhook da Efí na rota '/pix'.
  * Lida tanto com o Handshake de validação (corpo vazio) quanto com o recebimento
  * de notificações de pagamento PIX (corpo com payload).
- * A Efí exige que esta rota seja cadastrada como: https://SEUDOMINIO.com/pix
+ * A Efí exige que esta rota seja cadastrada como: https://webhook.sisnato.com.br/webhook/pix
  */
 app.post("/webhook/pix", async (req: Request, res: Response) => {
   const payload: Payload = req.body;
+  console.log("🚀 ~ Webhook PIX recebido:", req.body);
+  console.log("🔐 ~ Headers SSL:", {
+    verify: req.headers["x-ssl-client-verify"],
+    dn: req.headers["x-ssl-client-dn"],
+    serial: req.headers["x-ssl-client-serial"]
+  });
+
+  // Salvar log no arquivo payload.json
+  fs.appendFileSync(
+    "payload.json",
+    `${JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        headers: {
+          verify: req.headers["x-ssl-client-verify"],
+          dn: req.headers["x-ssl-client-dn"]
+        },
+        payload
+      },
+      null,
+      2
+    )}\n\n`
+  );
+
+  // Verificar se é um handshake (corpo vazio) ou notificação real
+  if (!payload || Object.keys(payload).length === 0) {
+    console.log("📝 Handshake de validação recebido");
+    return res.status(200).end();
+  }
+
   if (payload?.pix?.length > 0) {
-    // responder depois de processar o payload
-    if (payload.pix[0].txid) {
-      res.status(200).end();
-    }
-    for (const item of payload.pix) {
-      const txid = item.txid;
-      const valor = parseFloat(item.valor);
-      const horario = item.horario;
-      const infoPagador = item.infoPagador;
-      const nomePagador = item.gnExtras.pagador.nome;
-      const documentoPagador =
-        item.gnExtras.pagador.cnpj || item.gnExtras.pagador.cpf;
-      const banco = item.gnExtras.pagador.codigoBanco;
+    console.log(`📦 Processando ${payload.pix.length} transação(ões) PIX`);
 
-      const solicitacao: any = await prisma.read.solicitacao.findFirst({
-        where: {
-          txid: txid
-        }
-      });
+    try {
+      for (const item of payload.pix) {
+        const txid = item.txid;
+        const valor = parseFloat(item.valor);
+        const horario = item.horario;
+        const infoPagador = item.infoPagador;
+        const nomePagador = item.gnExtras?.pagador?.nome;
+        const documentoPagador =
+          item.gnExtras?.pagador?.cnpj || item.gnExtras?.pagador?.cpf;
+        const banco = item.gnExtras?.pagador?.codigoBanco;
 
-      if (solicitacao?.id) {
-        await prisma.write.solicitacao.update({
+        console.log(`🔍 Buscando solicitação para TXID: ${txid}`);
+
+        const solicitacao: any = await prisma.read.solicitacao.findFirst({
           where: {
-            id: solicitacao.id
-          },
-          data: {
-            valorcd: valor,
-            pg_date: new Date(horario),
-            pg_status: true,
-            pg_andamento: "PAGO",
-            estatos_pgto: "PAGO"
+            txid: txid
           }
         });
+
+        fs.appendFileSync(
+          "payload.json",
+          `${JSON.stringify(
+            `Solicitacao encontrada: ${solicitacao?.id || "Nao encontrado"}`,
+            null,
+            2
+          )}\n\n`
+        );
+
+        if (solicitacao?.id) {
+          console.log(`💾 Atualizando solicitação ID: ${solicitacao.id}`);
+
+          const update = await prisma.write.solicitacao.update({
+            where: {
+              id: solicitacao.id
+            },
+            data: {
+              valorcd: valor,
+              pg_date: new Date(horario).toISOString(),
+              pg_status: true,
+              pg_andamento: "PAGO",
+              estatos_pgto: "PAGO"
+            }
+          });
+
+          fs.appendFileSync(
+            "payload.json",
+            `${JSON.stringify(update, null, 2)}\n\n`
+          );
+          console.log(`✅ Solicitação atualizada com sucesso`);
+        }
+
+        // Notificar sistema externo
+        console.log(`🔔 Enviando notificação para sistema externo`);
+
+        try {
+          const response = await fetch(
+            "https://pagamento.sisnato.com.br/pagamentos",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                txid: txid,
+                dt_pg: new Date(horario).toISOString(),
+                valor: valor,
+                forma_pagamento: "PIX",
+                infoPagador: infoPagador,
+                nomePagador: nomePagador,
+                documentoPagador: documentoPagador,
+                banco: banco
+              })
+            }
+          );
+
+          if (response.ok) {
+            console.log(
+              `✅ Notificação enviada com sucesso para TXID: ${txid}`
+            );
+          } else {
+            console.error(
+              `❌ Erro ao enviar notificação para TXID: ${txid}`,
+              response.status
+            );
+          }
+        } catch (error) {
+          console.error(`❌ Erro na requisição para sistema externo:`, error);
+        }
       }
-      if (txid) {
-        await fetch("https://pagamento.sisnato.com.br/pagamentos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            txid: txid,
-            dt_pg: new Date(horario).toISOString(),
-            valor: valor,
-            forma_pagamento: "PIX",
-            infoPagador: infoPagador,
-            nomePagador: nomePagador,
-            documentoPagador: documentoPagador,
-            banco: banco
-          })
-        });
-      }
+
+      // Responder com sucesso após processar tudo
+      res.status(200).end();
+    } catch (error) {
+      console.error("❌ Erro ao processar webhook:", error);
+      fs.appendFileSync(
+        "payload.json",
+        `${JSON.stringify(
+          { error: error, timestamp: new Date().toISOString() },
+          null,
+          2
+        )}\n\n`
+      );
+      res.status(500).json({ error: "Erro interno do servidor" });
     }
   } else {
+    console.log("📝 Webhook recebido sem dados PIX");
     res.status(200).end();
   }
 });

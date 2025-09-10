@@ -5,13 +5,28 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 
 const {
+  PrismaClientKnownRequestError,
+  PrismaClientUnknownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientInitializationError,
+  PrismaClientValidationError,
+  getPrismaClient,
+  sqltag,
+  empty,
+  join,
+  raw,
+  skip,
   Decimal,
+  Debug,
   objectEnumValues,
   makeStrictEnum,
+  Extensions,
+  warnOnce,
+  defineDmmfProperty,
   Public,
   getRuntime,
-  skip
-} = require('./runtime/index-browser.js')
+  createParam,
+} = require('./runtime/wasm-engine-edge.js')
 
 
 const Prisma = {}
@@ -20,79 +35,35 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.13.0
- * Query Engine version: 361e86d0ea4987e9f53a565309b3eed797a6bcbd
+ * Prisma Client JS version: 6.16.0
+ * Query Engine version: 1c57fdcd7e44b29b9313256c76699e91c3ac3c43
  */
 Prisma.prismaVersion = {
-  client: "6.13.0",
-  engine: "361e86d0ea4987e9f53a565309b3eed797a6bcbd"
+  client: "6.16.0",
+  engine: "1c57fdcd7e44b29b9313256c76699e91c3ac3c43"
 }
 
-Prisma.PrismaClientKnownRequestError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientKnownRequestError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)};
-Prisma.PrismaClientUnknownRequestError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientUnknownRequestError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientRustPanicError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientRustPanicError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientInitializationError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientInitializationError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientValidationError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientValidationError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
+Prisma.PrismaClientUnknownRequestError = PrismaClientUnknownRequestError
+Prisma.PrismaClientRustPanicError = PrismaClientRustPanicError
+Prisma.PrismaClientInitializationError = PrismaClientInitializationError
+Prisma.PrismaClientValidationError = PrismaClientValidationError
 Prisma.Decimal = Decimal
 
 /**
  * Re-export of sql-template-tag
  */
-Prisma.sql = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`sqltag is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.empty = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`empty is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.join = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`join is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.raw = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`raw is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.sql = sqltag
+Prisma.empty = empty
+Prisma.join = join
+Prisma.raw = raw
 Prisma.validator = Public.validator
 
 /**
 * Extensions
 */
-Prisma.getExtensionContext = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`Extensions.getExtensionContext is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.defineExtension = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`Extensions.defineExtension is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.getExtensionContext = Extensions.getExtensionContext
+Prisma.defineExtension = Extensions.defineExtension
 
 /**
  * Shorthand utilities for JSON filtering
@@ -109,10 +80,11 @@ Prisma.NullTypes = {
 
 
 
+
+
 /**
  * Enums
  */
-
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
@@ -444,34 +416,83 @@ exports.Prisma.ModelName = {
   VideosFaq: 'VideosFaq',
   relatorio_financeiro: 'relatorio_financeiro'
 };
-
 /**
- * This is a stub Prisma Client that will error at runtime if called.
+ * Create the Client
  */
-class PrismaClient {
-  constructor() {
-    return new Proxy(this, {
-      get(target, prop) {
-        let message
-        const runtime = getRuntime()
-        if (runtime.isEdge) {
-          message = `PrismaClient is not configured to run in ${runtime.prettyName}. In order to run Prisma Client on edge runtime, either:
-- Use Prisma Accelerate: https://pris.ly/d/accelerate
-- Use Driver Adapters: https://pris.ly/d/driver-adapters
-`;
-        } else {
-          message = 'PrismaClient is unable to run in this browser environment, or has been bundled for the browser (running in `' + runtime.prettyName + '`).'
-        }
-
-        message += `
-If this is unexpected, please open an issue: https://pris.ly/prisma-prisma-bug-report`
-
-        throw new Error(message)
+const config = {
+  "generator": {
+    "name": "client",
+    "provider": {
+      "fromEnvVar": null,
+      "value": "prisma-client-js"
+    },
+    "output": {
+      "value": "/home/ti001/Documentos/projetos/webhook_pagamento/generated/prisma",
+      "fromEnvVar": null
+    },
+    "config": {
+      "engineType": "library"
+    },
+    "binaryTargets": [
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-1.1.x",
+        "native": true
       }
-    })
+    ],
+    "previewFeatures": [],
+    "sourceFilePath": "/home/ti001/Documentos/projetos/webhook_pagamento/prisma/schema.prisma",
+    "isCustomOutput": true
+  },
+  "relativeEnvPaths": {
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../.env"
+  },
+  "relativePath": "../../prisma",
+  "clientVersion": "6.16.0",
+  "engineVersion": "1c57fdcd7e44b29b9313256c76699e91c3ac3c43",
+  "datasourceNames": [
+    "db"
+  ],
+  "activeProvider": "postgresql",
+  "postinstall": false,
+  "inlineDatasources": {
+    "db": {
+      "url": {
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
+      }
+    }
+  },
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Alert {\n  id             Int          @id @unique @default(autoincrement())\n  solicitacao_id Int?\n  status         Boolean      @default(true)\n  createdAt      DateTime     @default(now())\n  updatedAt      DateTime?\n  descricao      String\n  corretor_id    Int?\n  User           User?        @relation(fields: [corretor_id], references: [id], onUpdate: SetNull)\n  Solicitacao    Solicitacao? @relation(fields: [solicitacao_id], references: [id], onUpdate: SetNull)\n}\n\nmodel Bug {\n  id        Int       @id @unique @default(autoincrement())\n  descricao String\n  status    Boolean   @default(true)\n  createAt  DateTime  @default(now())\n  updatedAt DateTime?\n}\n\nmodel Chamado {\n  id            Int       @id @unique @default(autoincrement())\n  descricao     String\n  status        String\n  idUser        Int\n  createAt      DateTime  @default(now())\n  updatedAt     DateTime?\n  solicitacaoId Int\n  images        Json[]\n  chat          Json[]\n  temp          Json[]\n  departamento  String?   @default(\"vendas\")\n  dth_qru       DateTime  @default(now())\n  prioridade    String?   @default(\"baixa\")\n  titulo        String\n}\n\nmodel Construtora {\n  id                    Int                     @id @unique @default(autoincrement())\n  cnpj                  String                  @unique @db.VarChar(18)\n  razaosocial           String                  @db.VarChar(255)\n  fantasia              String?                 @db.VarChar(255)\n  tel                   String?                 @db.VarChar(15)\n  email                 String?                 @db.VarChar(100)\n  obs                   String?\n  status                Boolean                 @default(true)\n  valor_cert            Float?                  @default(84.00)\n  createdAt             DateTime                @default(now())\n  updatedAt             DateTime?\n  atividade             String?                 @db.VarChar(100)\n  Msg_Boas_Vindas       String?\n  responsavel           String?\n  Empreendimento        Empreendimento[]\n  FinanceiroConstrutora FinanceiroConstrutora[]\n  Solicitacao           Solicitacao[]\n  UserConstrutora       UserConstrutora[]\n  relatorio_financeiro  relatorio_financeiro[]\n\n  @@index([cnpj], map: \"idx_construtora_cnpj\")\n  @@index([razaosocial], map: \"idx_construtora_razaosocial\")\n}\n\nmodel Direto {\n  id            Int          @id @default(autoincrement())\n  solicitacaoId Int?\n  descricao     String?\n  createAt      DateTime     @default(now())\n  Solicitacao   Solicitacao? @relation(fields: [solicitacaoId], references: [id])\n  DiretoTag     DiretoTag[]\n}\n\nmodel DiretoTag {\n  id        Int      @id @default(autoincrement())\n  diretoId  Int\n  descricao String\n  createAt  DateTime @default(now())\n  Direto    Direto   @relation(fields: [diretoId], references: [id], onDelete: Cascade)\n}\n\nmodel Empreendimento {\n  id                       Int                        @id @unique @default(autoincrement())\n  nome                     String                     @db.VarChar(255)\n  endereco                 String?                    @db.VarChar(255)\n  cidade                   String?                    @db.VarChar(100)\n  estado                   String?                    @db.VarChar(2)\n  cep                      String?                    @db.VarChar(10)\n  obs                      String?\n  status                   Boolean                    @default(true)\n  tag                      String?                    @db.VarChar(50)\n  construtoraId            Int?\n  responsavelId            Int?\n  createdAt                DateTime                   @default(now())\n  updatedAt                DateTime?\n  Construtora              Construtora?               @relation(fields: [construtoraId], references: [id])\n  User                     User?                      @relation(fields: [responsavelId], references: [id])\n  FinanceiroEmpreendimento FinanceiroEmpreendimento[]\n  Solicitacao              Solicitacao[]\n  UserEmpreendimento       UserEmpreendimento[]\n  relatorio_financeiro     relatorio_financeiro[]\n\n  @@index([cidade, estado], map: \"idx_empreendimento_localizacao\")\n  @@index([nome], map: \"idx_empreendimento_nome\")\n}\n\nmodel Financeiro {\n  id                       Int                        @id @unique @default(autoincrement())\n  cnpj                     String                     @unique @db.VarChar(18)\n  razaosocial              String                     @db.VarChar(255)\n  fantasia                 String?                    @db.VarChar(255)\n  tel                      String?\n  email                    String?                    @db.VarChar(100)\n  obs                      String?\n  createdAt                DateTime                   @default(now())\n  updatedAt                DateTime?\n  direto                   Boolean                    @default(false)\n  responsavel              String?\n  valor_cert               Float?                     @default(0)\n  FinanceiroConstrutora    FinanceiroConstrutora[]\n  FinanceiroEmpreendimento FinanceiroEmpreendimento[]\n  Solicitacao              Solicitacao[]\n  UserFinanceiro           UserFinanceiro[]\n\n  @@index([cnpj], map: \"idx_financeiro_cnpj\")\n  @@index([razaosocial], map: \"idx_financeiro_razaosocial\")\n}\n\nmodel FinanceiroConstrutora {\n  financeiroId  Int\n  construtoraId Int\n  Construtora   Construtora @relation(fields: [construtoraId], references: [id])\n  Financeiro    Financeiro  @relation(fields: [financeiroId], references: [id])\n\n  @@id([construtoraId, financeiroId])\n}\n\nmodel FinanceiroEmpreendimento {\n  financeiroId     Int\n  empreendimentoId Int\n  Empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)\n  Financeiro       Financeiro     @relation(fields: [financeiroId], references: [id], onDelete: Cascade)\n\n  @@id([empreendimentoId, financeiroId])\n}\n\nmodel Logs {\n  id        Int       @id @unique @default(autoincrement())\n  User      Int\n  EffectId  Int\n  descricao String\n  createAt  DateTime  @default(now())\n  updatedAt DateTime?\n  rota      String\n}\n\nmodel Solicitacao {\n  id                Int             @id @unique @default(autoincrement())\n  nome              String          @db.VarChar(255)\n  email             String          @db.VarChar(100)\n  cpf               String          @db.VarChar(14)\n  telefone          String?         @db.VarChar(15)\n  telefone2         String?         @db.VarChar(15)\n  dt_nascimento     DateTime?\n  id_fcw            Int?\n  cnh               String?         @db.VarChar(20)\n  ativo             Boolean         @default(true)\n  rela_quest        Boolean         @default(false)\n  distrato          Boolean         @default(false)\n  dt_distrato       DateTime?\n  status_aprovacao  Boolean?        @default(false)\n  distrato_id       Int?\n  andamento         String?         @db.VarChar(100)\n  type_validacao    String?         @db.VarChar(50)\n  dt_aprovacao      DateTime?       @db.Date\n  hr_aprovacao      DateTime?       @db.Time(6)\n  dt_agendamento    DateTime?       @db.Date\n  hr_agendamento    DateTime?       @db.Time(6)\n  estatos_pgto      String?         @db.VarChar(50)\n  valorcd           Float?\n  situacao_pg       Int?            @default(0)\n  freqSms           Int?            @default(0)\n  alertanow         Boolean?        @default(false)\n  dt_criacao_now    DateTime?\n  statusAtendimento Boolean         @default(false)\n  pause             Boolean?        @default(false)\n  corretorId        Int?\n  construtoraId     Int?\n  financeiroId      Int?\n  empreendimentoId  Int?\n  createdAt         DateTime        @default(now())\n  updatedAt         DateTime?\n  relacionamentos   Json[]\n  dt_revogacao      DateTime?\n  direto            Boolean         @default(false)\n  txid              String?         @db.VarChar(300)\n  pixCopiaECola     String?\n  imagemQrcode      String?\n  uploadCnh         Json?\n  uploadRg          Json?\n  obs               Json[]\n  pg_andamento      String?         @default(\"pendente\") @db.VarChar(50)\n  pg_date           DateTime?\n  pg_status         Boolean?        @default(false)\n  Alert             Alert[]\n  Direto            Direto[]\n  Construtora       Construtora?    @relation(fields: [construtoraId], references: [id])\n  User              User?           @relation(fields: [corretorId], references: [id])\n  Empreendimento    Empreendimento? @relation(fields: [empreendimentoId], references: [id])\n  Financeiro        Financeiro?     @relation(fields: [financeiroId], references: [id])\n  Tag               Tag[]\n\n  @@index([email], map: \"idx_solicitacao_email\")\n  @@index([txid], map: \"idx_solicitacao_txid\")\n}\n\nmodel Suporte {\n  id          Int       @id @unique @default(autoincrement())\n  tag         String\n  descricao   String?\n  solicitacao Int?\n  imgSuspensa String?\n  createAt    DateTime  @default(now())\n  updatedAt   DateTime?\n  urlveiw     Json[]\n}\n\nmodel SystemMessage {\n  id        Int       @id @unique @default(autoincrement())\n  tipo      String\n  message   String\n  createAt  DateTime  @default(now())\n  updatedAt DateTime?\n}\n\nmodel Tag {\n  id          Int          @id @default(autoincrement())\n  solicitacao Int?\n  descricao   String?\n  createAt    DateTime     @default(now())\n  Solicitacao Solicitacao? @relation(fields: [solicitacao], references: [id], onDelete: NoAction, onUpdate: SetNull)\n}\n\nmodel TagList {\n  id        Int      @id @unique @default(autoincrement())\n  label     String\n  createdAt DateTime @default(now())\n}\n\nmodel Termo {\n  id        Int       @id @unique @default(autoincrement())\n  termo     String\n  politica  String\n  createAt  DateTime  @default(now())\n  updatedAt DateTime?\n}\n\nmodel User {\n  id                 Int                  @id @unique @default(autoincrement())\n  username           String               @unique @db.VarChar(50)\n  password           String               @db.VarChar(255)\n  password_key       String               @db.VarChar(100)\n  telefone           String?              @db.VarChar(15)\n  email              String?              @unique @db.VarChar(100)\n  cpf                String?              @db.VarChar(14)\n  nome               String?              @db.VarChar(255)\n  cargo              String?              @db.VarChar(100)\n  hierarquia         String?              @db.VarChar(100)\n  reset_password     Boolean?             @default(true)\n  status             Boolean?             @default(false)\n  sms_relat          Boolean?             @default(false)\n  termos             Boolean?             @default(false)\n  createdAt          DateTime             @default(now())\n  updatedAt          DateTime?\n  role               Json?\n  Alert              Alert[]\n  Empreendimento     Empreendimento[]\n  Solicitacao        Solicitacao[]\n  UserConstrutora    UserConstrutora[]\n  UserEmpreendimento UserEmpreendimento[]\n  UserFinanceiro     UserFinanceiro[]\n\n  @@index([cpf], map: \"idx_user_cpf\")\n  @@index([email], map: \"idx_user_email\")\n  @@index([username], map: \"idx_user_username\")\n}\n\nmodel UserConstrutora {\n  userId        Int\n  construtoraId Int\n  Construtora   Construtora @relation(fields: [construtoraId], references: [id], onDelete: Cascade)\n  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@id([userId, construtoraId])\n}\n\nmodel UserEmpreendimento {\n  userId           Int\n  empreendimentoId Int\n  Empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)\n  User             User           @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@id([userId, empreendimentoId])\n}\n\nmodel UserFinanceiro {\n  userId       Int\n  financeiroId Int\n  Financeiro   Financeiro @relation(fields: [financeiroId], references: [id], onDelete: Cascade)\n  User         User       @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@id([userId, financeiroId])\n}\n\nmodel VideosFaq {\n  id       Int      @id @unique @default(autoincrement())\n  nome     String\n  url      String\n  createAt DateTime @default(now())\n  tag      String\n}\n\nmodel relatorio_financeiro {\n  id               Int             @id @unique @default(autoincrement())\n  protocolo        String          @unique\n  situacao_pg      Int             @default(0)\n  nota_fiscal      String?         @db.VarChar(255)\n  start            DateTime?       @db.Date\n  end              DateTime?       @db.Date\n  statusNota       Boolean?        @default(false)\n  createAt         DateTime        @default(now())\n  updatedAt        DateTime?\n  construtoraId    Int?\n  total_cert       Int?\n  valorTotal       Float?\n  solicitacao      Json[]          @default([])\n  pdf              String?         @db.VarChar(255)\n  xlsx             String?         @db.VarChar(255)\n  modelo           String?\n  empreendimentoId Int?\n  dt_pg            DateTime?\n  status           Boolean         @default(true)\n  Construtora      Construtora?    @relation(fields: [construtoraId], references: [id], onDelete: NoAction, onUpdate: SetNull)\n  Empreendimento   Empreendimento? @relation(fields: [empreendimentoId], references: [id], onDelete: NoAction, onUpdate: SetNull)\n}\n",
+  "inlineSchemaHash": "330d4bde00bcee0a5b948f6442946fd84c51faa9191b034828dcf9b86f79abb1",
+  "copyEngine": true
+}
+config.dirname = '/'
+
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Alert\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"solicitacao_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"corretor_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AlertToUser\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"AlertToSolicitacao\"}],\"dbName\":null},\"Bug\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Chamado\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"idUser\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"solicitacaoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"images\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"chat\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"temp\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"departamento\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dth_qru\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"prioridade\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"titulo\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"Construtora\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cnpj\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"razaosocial\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fantasia\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"obs\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"valor_cert\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"atividade\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"Msg_Boas_Vindas\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"responsavel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"ConstrutoraToEmpreendimento\"},{\"name\":\"FinanceiroConstrutora\",\"kind\":\"object\",\"type\":\"FinanceiroConstrutora\",\"relationName\":\"ConstrutoraToFinanceiroConstrutora\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"ConstrutoraToSolicitacao\"},{\"name\":\"UserConstrutora\",\"kind\":\"object\",\"type\":\"UserConstrutora\",\"relationName\":\"ConstrutoraToUserConstrutora\"},{\"name\":\"relatorio_financeiro\",\"kind\":\"object\",\"type\":\"relatorio_financeiro\",\"relationName\":\"ConstrutoraTorelatorio_financeiro\"}],\"dbName\":null},\"Direto\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"solicitacaoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"DiretoToSolicitacao\"},{\"name\":\"DiretoTag\",\"kind\":\"object\",\"type\":\"DiretoTag\",\"relationName\":\"DiretoToDiretoTag\"}],\"dbName\":null},\"DiretoTag\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"diretoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"Direto\",\"kind\":\"object\",\"type\":\"Direto\",\"relationName\":\"DiretoToDiretoTag\"}],\"dbName\":null},\"Empreendimento\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nome\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"endereco\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cidade\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"estado\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cep\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"obs\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"tag\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"construtoraId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"responsavelId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"Construtora\",\"kind\":\"object\",\"type\":\"Construtora\",\"relationName\":\"ConstrutoraToEmpreendimento\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"EmpreendimentoToUser\"},{\"name\":\"FinanceiroEmpreendimento\",\"kind\":\"object\",\"type\":\"FinanceiroEmpreendimento\",\"relationName\":\"EmpreendimentoToFinanceiroEmpreendimento\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"EmpreendimentoToSolicitacao\"},{\"name\":\"UserEmpreendimento\",\"kind\":\"object\",\"type\":\"UserEmpreendimento\",\"relationName\":\"EmpreendimentoToUserEmpreendimento\"},{\"name\":\"relatorio_financeiro\",\"kind\":\"object\",\"type\":\"relatorio_financeiro\",\"relationName\":\"EmpreendimentoTorelatorio_financeiro\"}],\"dbName\":null},\"Financeiro\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cnpj\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"razaosocial\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fantasia\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"obs\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"direto\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"responsavel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"valor_cert\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"FinanceiroConstrutora\",\"kind\":\"object\",\"type\":\"FinanceiroConstrutora\",\"relationName\":\"FinanceiroToFinanceiroConstrutora\"},{\"name\":\"FinanceiroEmpreendimento\",\"kind\":\"object\",\"type\":\"FinanceiroEmpreendimento\",\"relationName\":\"FinanceiroToFinanceiroEmpreendimento\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"FinanceiroToSolicitacao\"},{\"name\":\"UserFinanceiro\",\"kind\":\"object\",\"type\":\"UserFinanceiro\",\"relationName\":\"FinanceiroToUserFinanceiro\"}],\"dbName\":null},\"FinanceiroConstrutora\":{\"fields\":[{\"name\":\"financeiroId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"construtoraId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"Construtora\",\"kind\":\"object\",\"type\":\"Construtora\",\"relationName\":\"ConstrutoraToFinanceiroConstrutora\"},{\"name\":\"Financeiro\",\"kind\":\"object\",\"type\":\"Financeiro\",\"relationName\":\"FinanceiroToFinanceiroConstrutora\"}],\"dbName\":null},\"FinanceiroEmpreendimento\":{\"fields\":[{\"name\":\"financeiroId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"empreendimentoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"EmpreendimentoToFinanceiroEmpreendimento\"},{\"name\":\"Financeiro\",\"kind\":\"object\",\"type\":\"Financeiro\",\"relationName\":\"FinanceiroToFinanceiroEmpreendimento\"}],\"dbName\":null},\"Logs\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"User\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"EffectId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"rota\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"Solicitacao\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nome\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cpf\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"telefone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"telefone2\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dt_nascimento\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"id_fcw\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cnh\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"ativo\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"rela_quest\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"distrato\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"dt_distrato\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status_aprovacao\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"distrato_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"andamento\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type_validacao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dt_aprovacao\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"hr_aprovacao\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"dt_agendamento\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"hr_agendamento\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"estatos_pgto\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"valorcd\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"situacao_pg\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"freqSms\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"alertanow\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"dt_criacao_now\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"statusAtendimento\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"pause\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"corretorId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"construtoraId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"financeiroId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"empreendimentoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"relacionamentos\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"dt_revogacao\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"direto\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"txid\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pixCopiaECola\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imagemQrcode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"uploadCnh\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"uploadRg\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"obs\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"pg_andamento\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pg_date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"pg_status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"Alert\",\"kind\":\"object\",\"type\":\"Alert\",\"relationName\":\"AlertToSolicitacao\"},{\"name\":\"Direto\",\"kind\":\"object\",\"type\":\"Direto\",\"relationName\":\"DiretoToSolicitacao\"},{\"name\":\"Construtora\",\"kind\":\"object\",\"type\":\"Construtora\",\"relationName\":\"ConstrutoraToSolicitacao\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SolicitacaoToUser\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"EmpreendimentoToSolicitacao\"},{\"name\":\"Financeiro\",\"kind\":\"object\",\"type\":\"Financeiro\",\"relationName\":\"FinanceiroToSolicitacao\"},{\"name\":\"Tag\",\"kind\":\"object\",\"type\":\"Tag\",\"relationName\":\"SolicitacaoToTag\"}],\"dbName\":null},\"Suporte\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"tag\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"solicitacao\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"imgSuspensa\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"urlveiw\",\"kind\":\"scalar\",\"type\":\"Json\"}],\"dbName\":null},\"SystemMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"tipo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"message\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Tag\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"solicitacao\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"descricao\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"SolicitacaoToTag\"}],\"dbName\":null},\"TagList\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"label\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Termo\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"termo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"politica\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password_key\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"telefone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cpf\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"nome\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cargo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hierarquia\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"reset_password\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"sms_relat\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"termos\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"role\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"Alert\",\"kind\":\"object\",\"type\":\"Alert\",\"relationName\":\"AlertToUser\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"EmpreendimentoToUser\"},{\"name\":\"Solicitacao\",\"kind\":\"object\",\"type\":\"Solicitacao\",\"relationName\":\"SolicitacaoToUser\"},{\"name\":\"UserConstrutora\",\"kind\":\"object\",\"type\":\"UserConstrutora\",\"relationName\":\"UserToUserConstrutora\"},{\"name\":\"UserEmpreendimento\",\"kind\":\"object\",\"type\":\"UserEmpreendimento\",\"relationName\":\"UserToUserEmpreendimento\"},{\"name\":\"UserFinanceiro\",\"kind\":\"object\",\"type\":\"UserFinanceiro\",\"relationName\":\"UserToUserFinanceiro\"}],\"dbName\":null},\"UserConstrutora\":{\"fields\":[{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"construtoraId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"Construtora\",\"kind\":\"object\",\"type\":\"Construtora\",\"relationName\":\"ConstrutoraToUserConstrutora\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserConstrutora\"}],\"dbName\":null},\"UserEmpreendimento\":{\"fields\":[{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"empreendimentoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"EmpreendimentoToUserEmpreendimento\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserEmpreendimento\"}],\"dbName\":null},\"UserFinanceiro\":{\"fields\":[{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"financeiroId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"Financeiro\",\"kind\":\"object\",\"type\":\"Financeiro\",\"relationName\":\"FinanceiroToUserFinanceiro\"},{\"name\":\"User\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserFinanceiro\"}],\"dbName\":null},\"VideosFaq\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nome\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"url\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"tag\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"relatorio_financeiro\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"protocolo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"situacao_pg\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nota_fiscal\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"start\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"end\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"statusNota\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"construtoraId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"total_cert\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"valorTotal\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"solicitacao\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"pdf\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"xlsx\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"modelo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"empreendimentoId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"dt_pg\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"Construtora\",\"kind\":\"object\",\"type\":\"Construtora\",\"relationName\":\"ConstrutoraTorelatorio_financeiro\"},{\"name\":\"Empreendimento\",\"kind\":\"object\",\"type\":\"Empreendimento\",\"relationName\":\"EmpreendimentoTorelatorio_financeiro\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
+config.engineWasm = {
+  getRuntime: async () => require('./query_engine_bg.js'),
+  getQueryEngineWasmModule: async () => {
+    const loader = (await import('#wasm-engine-loader')).default
+    const engine = (await loader).default
+    return engine
   }
 }
+config.compilerWasm = undefined
 
+config.injectableEdgeEnv = () => ({
+  parsed: {
+    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+  }
+})
+
+if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
+  Debug.enable(typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined)
+}
+
+const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
-
 Object.assign(exports, Prisma)
+
